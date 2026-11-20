@@ -1,0 +1,38 @@
+# A release from a tag: push v1.2.3 and this runs the check and the firmware builds for that commit; only when they all
+# pass does it publish the GitHub release, with that version's part of CHANGELOG.md as its notes. Tessera's community
+# listing follows the releases, so a version that fails never reaches a screen. The tag must match `version` in
+# tessera-plugin.yaml.
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    uses: ./.github/workflows/check.yml
+  build:
+    uses: ./.github/workflows/build.yml
+
+  release:
+    needs: [check, build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tag and manifest agree
+        run: |
+          version=$(sed -n 's/^version: *//p' tessera-plugin.yaml | tr -d "'\"")
+          [ "v${version}" = "${GITHUB_REF_NAME}" ] || { echo "Tag ${GITHUB_REF_NAME} but tessera-plugin.yaml says ${version}"; exit 1; }
+      - name: Notes from CHANGELOG.md
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          awk -v v="## ${version}" '$0 == v {on=1; next} /^## / && on {exit} on' CHANGELOG.md > notes.md
+          [ -s notes.md ] || { echo "No section ## ${version} in CHANGELOG.md"; exit 1; }
+          cat notes.md
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${GITHUB_REF_NAME}" --title "Ora ${GITHUB_REF_NAME}" --notes-file notes.md --verify-tag

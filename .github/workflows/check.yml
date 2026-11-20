@@ -1,0 +1,43 @@
+# Every push and pull request, and every Monday: the unit tests of the face's logic (tests/test_logic.cpp, with the
+# sanitizers) and the check of the tessera-plugins repository (tools/check.py), the same check the community listing
+# runs at every release. On Monday too, so a new rule of the plugins repository shows before the next release does.
+name: check
+
+on:
+  push:
+    branches: ["**"]  # tags go through release.yml, which runs this itself
+  pull_request:
+  schedule:
+    - cron: "41 4 * * 1"
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  secrets:
+    # A public repository: no key, token or password may land in it, in any commit.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: gitleaks
+        run: |
+          curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz \
+            | tar -xz -C /usr/local/bin gitleaks
+          gitleaks git --redact --verbose .
+
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { path: plugin }
+      - uses: actions/checkout@v4
+        with: { repository: MaxGramser/tessera-plugins, path: tessera-plugins }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.13" }
+      - run: python -m pip install pyyaml
+      - name: unit tests
+        run: python plugin/tests/run.py unit
+      - name: tessera-plugins check
+        env:
+          TESSERA_PLUGINS: ${{ github.workspace }}/tessera-plugins
+        run: python plugin/tests/run.py check

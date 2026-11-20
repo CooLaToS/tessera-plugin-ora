@@ -1,0 +1,96 @@
+# A whole screen firmware with Ora, as the Tessera app builds it: Tessera's screen package at its newest release (or a
+# ref given by hand), the ESPHome version of that release's app (its Dockerfile), and this plugin beside it. Three
+# screens: the CYD (ESP32, 4 MB flash, no PSRAM: the tightest), the Guition 4-inch (ESP32-S3, the screen Ora is used
+# on) and the Guition 10.1-inch V3 (ESP32-P4). Every Monday as well, so a Tessera release that breaks the plugin shows
+# within a week. The bench of tests/run.py builds for a computer; only this build shows that Ora compiles and fits for
+# the chips themselves. The same approach as other community plugins' build workflows.
+name: build
+
+on:
+  push:
+    branches: ["**"]  # tags go through release.yml, which runs this itself
+  pull_request:
+  schedule:
+    - cron: "11 5 * * 1"
+  workflow_dispatch:
+    inputs:
+      tessera_ref:
+        description: Tessera ref to build against (a screens-v* tag or a branch); empty for the newest release
+        default: ""
+      esphome:
+        description: ESPHome version; empty for the one of that Tessera's app
+        default: ""
+  workflow_call:
+
+jobs:
+  firmware:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        board: [cyd, guition, jc8012p4a1v3]
+    name: firmware (${{ matrix.board }})
+    steps:
+      - uses: actions/checkout@v4
+        with: { path: plugin }
+      - name: Tessera release
+        id: tessera
+        env:
+          WANT_REF: ${{ inputs.tessera_ref }}
+        run: |
+          ref="$WANT_REF"
+          if [ -z "$ref" ]; then
+            ref=$(git ls-remote --tags --refs https://github.com/MaxGramser/homeassistant_espscreen 'screens-v*' \
+                  | sed 's#.*refs/tags/##' | sort -V | tail -1)
+          fi
+          [ -n "$ref" ] || { echo "No Tessera release found"; exit 1; }
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+          echo "Tessera: $ref"
+      - uses: actions/checkout@v4
+        with:
+          repository: MaxGramser/homeassistant_espscreen
+          ref: ${{ steps.tessera.outputs.ref }}
+          path: tessera
+      - name: ESPHome of that Tessera
+        id: esphome
+        env:
+          WANT_ESPHOME: ${{ inputs.esphome }}
+        run: |
+          version="$WANT_ESPHOME"
+          [ -n "$version" ] || version=$(sed -n 's#^FROM ghcr.io/esphome/esphome:\([0-9.]*\).*#\1#p' tessera/screen_manager/Dockerfile | head -1)
+          [ -n "$version" ] || { echo "No ESPHome version in Tessera's Dockerfile"; exit 1; }
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "ESPHome: $version"
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.13" }
+      - run: python -m pip install "esphome==${{ steps.esphome.outputs.version }}" pyyaml
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/esphome
+          key: esphome-${{ runner.os }}-${{ matrix.board }}-${{ steps.esphome.outputs.version }}-${{ steps.tessera.outputs.ref }}
+          restore-keys: esphome-${{ runner.os }}-${{ matrix.board }}-${{ steps.esphome.outputs.version }}-
+      - name: A screen with Ora
+        working-directory: tessera/checkout
+        run: |
+          id=$(python -c "import yaml; print(yaml.safe_load(open('../../plugin/tessera-plugin.yaml'))['id'])")
+          # Made-up secrets: this firmware is only built, never flashed.
+          cat > secrets.yaml <<EOF
+          wifi_ssid: "ci"
+          wifi_password: "ci-password"
+          api_encryption_key: "$(head -c 32 /dev/urandom | base64)"
+          ota_password: "ci-ota"
+          ap_password: "ci-ap-password"
+          EOF
+          # As the Tessera app writes a screen's plugins file (docs/TESTING.md of tessera-plugins).
+          {
+            echo "packages:"
+            echo "  screen: !include ${{ matrix.board }}.yaml"
+            echo "  plugin_${id}: !include ../../plugin/plugin.yaml"
+            echo "external_components:"
+            echo "  - source: { type: local, path: ../../plugin/components }"
+          } > ci-plugin.yaml
+          cat ci-plugin.yaml
+      - name: esphome compile
+        working-directory: tessera/checkout
+        run: esphome compile ci-plugin.yaml
