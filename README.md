@@ -109,8 +109,9 @@ uv run tests/run.py unit         # only the unit tests of the face's logic (seco
 The check and the bench need a clone of [tessera-plugins](https://github.com/MaxGramser/tessera-plugins) beside this
 repository (or `TESSERA_PLUGINS=<path>`), its bench set up once (`python3 tools/preview.py --setup` there).
 
-On GitHub, `check.yml` runs the unit tests, Tessera's check and a secret scan, `build.yml` the firmware builds, and
-`release.yml` publishes a release from a `v*` tag only when both pass.
+On GitHub, `check.yml` runs the unit tests, Tessera's check and a secret scan, `build.yml` the firmware builds (at
+every change and every Monday), `tessera-watch.yml` builds again the day a new Tessera release comes out, and
+`release.yml` publishes a release from a `v*` tag only when the check and the builds pass.
 
 ## Credits
 

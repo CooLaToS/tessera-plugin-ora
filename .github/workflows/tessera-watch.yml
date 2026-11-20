@@ -1,0 +1,62 @@
+# Every day: is there a Tessera release that Ora has not been built against yet? Then build it now (build.yml), so a
+# Tessera change that breaks Ora shows within a day, without waiting for Monday's build or for a user's report.
+#
+# The memory is a tiny file in GitHub's Actions cache ("last built: screens-v0.4.99"), no token needed. GitHub drops a
+# cache that is not used for 7 days; then this simply builds once more, so a lost memory costs a build, never a missed
+# release. A Tessera without any screens-v* tag (the tags renamed, say) fails this run loudly instead of passing quietly.
+name: tessera-watch
+
+on:
+  schedule:
+    - cron: "23 6 * * *"
+  workflow_dispatch:
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.latest.outputs.tag }}
+      new: ${{ steps.compare.outputs.new }}
+    steps:
+      - name: Newest Tessera release
+        id: latest
+        run: |
+          tag=$(git ls-remote --tags --refs https://github.com/MaxGramser/homeassistant_espscreen 'screens-v*' \
+                | sed 's#.*refs/tags/##' | sort -V | tail -1)
+          if [ -z "$tag" ]; then
+            echo "::error::No screens-v* tag in MaxGramser/homeassistant_espscreen: Tessera's release tags changed, update this workflow"
+            exit 1
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "Newest Tessera: $tag"
+      - name: What was built last
+        uses: actions/cache/restore@v4
+        with:
+          path: last-built
+          key: tessera-last-built-${{ steps.latest.outputs.tag }}
+          restore-keys: tessera-last-built-
+      - name: Compare
+        id: compare
+        env:
+          TAG: ${{ steps.latest.outputs.tag }}
+        run: |
+          last=$(cat last-built 2>/dev/null || echo none)
+          echo "Last built against: $last"
+          if [ "$last" = "$TAG" ]; then echo "new=false" >> "$GITHUB_OUTPUT"; else echo "new=true" >> "$GITHUB_OUTPUT"; fi
+
+  build:
+    needs: detect
+    if: needs.detect.outputs.new == 'true'
+    uses: ./.github/workflows/build.yml
+    with:
+      tessera_ref: ${{ needs.detect.outputs.tag }}
+
+  remember:
+    needs: [detect, build]
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "${{ needs.detect.outputs.tag }}" > last-built
+      - uses: actions/cache/save@v4
+        with:
+          path: last-built
+          key: tessera-last-built-${{ needs.detect.outputs.tag }}

@@ -21,6 +21,15 @@ on:
         description: ESPHome version; empty for the one of that Tessera's app
         default: ""
   workflow_call:
+    inputs:
+      tessera_ref:
+        description: Tessera ref to build against; empty for the newest release
+        type: string
+        default: ""
+      esphome:
+        description: ESPHome version; empty for the one of that Tessera's app
+        type: string
+        default: ""
 
 jobs:
   firmware:
