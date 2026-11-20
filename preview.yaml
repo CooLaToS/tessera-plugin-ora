@@ -1,0 +1,39 @@
+# What tools/preview.py shows (docs/PREVIEW.md, "Screensavers"). The first ones make the store picture.
+# Icons are codepoints of Tessera's set: F0597 weather-rainy, F0595 weather-partly-cloudy, F0599 weather-sunny,
+# F058E water-percent.
+savers:
+  - saver: ora
+    name: Gold large cards rain
+    data: { temperature: "21°", items: [{ icon: 984471, text: "" }] }
+  - saver: ora
+    name: Wood walnut boxes champagne mint
+    options: { digits: champagne, boxes: walnut, date: mint, temperature: mint, date_format: numeric, row: full }
+    data: { temperature: "23°", items: [{ icon: 984471, text: "Rainy" }] }
+  - saver: ora
+    name: Wood oak digits walnut boxes
+    options: { digits: oak, minutes: champagne, boxes: walnut, date: oak, date_format: weekday_long }
+    data: { temperature: "23°", items: [{ icon: 984471, text: "" }] }
+  - saver: ora
+    name: Champagne stacked outline weekday
+    options: { digits: champagne, style: outline, size: stacked, date_format: weekday_long }
+    data: { temperature: "21°", items: [{ icon: 984469, text: "" }] }
+  - saver: ora
+    name: Two tone tinted numeric with words
+    options: { digits: gold, minutes: champagne, boxes: tint, date_format: numeric, row: full }
+    data: { temperature: "21°", items: [{ icon: 984473, text: "Sunny" }, { icon: 984462, text: "54%" }] }
+  - saver: ora
+    name: Blue boxes white digits
+    options: { digits: white, boxes: blue }
+    data: { temperature: "21°", items: [] }
+  - saver: ora
+    name: Plain amber no zero no seconds
+    options: { digits: amber, style: plain, leading_zero: false, seconds: false, date_format: none, row: off }
+    data: { temperature: "", items: [] }
+  - saver: ora
+    name: Normal teal outline long date
+    options: { digits: teal, style: outline, size: normal, date_format: long }
+    data: { temperature: "21°", items: [{ icon: 984471, text: "" }] }
+  - saver: ora
+    name: Night red
+    options: { night: red }
+    data: { temperature: "21°", items: [{ icon: 984471, text: "" }] }
