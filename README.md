@@ -28,12 +28,20 @@ says otherwise. Under each one, the options that make it.
 | **Gold flip cards**: the defaults. | **Two tones**: hours Gold, minutes Champagne, boxes Tinted, date 20/11, row Icons and words. |
 | ![Walnut boxes](docs/images/walnut-champagne-mint.png) | ![Oak and walnut](docs/images/oak-walnut-weekday.png) |
 | **Wood**: hours Champagne, boxes Walnut, date and temperature Mint, date 20/11, row Icons and words. | **Oak and walnut**: hours Oak, minutes Champagne, boxes Walnut, date Oak, date Friday 20 November. |
+
+<details>
+<summary><b>Show all examples</b> (six more: outline, plain, other sizes and screens)</summary>
+
+| | |
+|---|---|
 | ![Champagne outline, stacked](docs/images/champagne-outline-stacked.png) | ![White on blue](docs/images/white-on-blue.png) |
 | **Outline, stacked**: hours Champagne, style Outline, size Stacked, date Friday 20 November. | **White on blue**: hours White, boxes Blue. |
 | ![Plain amber](docs/images/amber-plain.png) | ![Teal outline, normal size](docs/images/teal-outline-normal.png) |
 | **Plain**: hours Amber, style Plain digits, no leading zero, no seconds dot, no date, row Off. | **Normal size**: hours Teal, style Outline, size Normal, date 20 November. |
 | ![On a CYD](docs/images/cyd-gold.png) | ![On a 10-inch screen](docs/images/p4-10inch-two-tone.png) |
 | **CYD 2.8-inch** (320 x 240): the defaults. | **Guition 10.1-inch** (1280 x 800): two tones. |
+
+</details>
 
 ## Options
 
