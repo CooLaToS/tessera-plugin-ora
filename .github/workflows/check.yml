@@ -12,6 +12,10 @@ on:
   workflow_dispatch:
   workflow_call:
 
+# Read-only token: also when release.yml calls this workflow with contents: write.
+permissions:
+  contents: read
+
 jobs:
   secrets:
     # A public repository: no key, token or password may land in it, in any commit.

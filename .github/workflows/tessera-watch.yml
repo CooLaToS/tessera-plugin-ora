@@ -11,6 +11,10 @@ on:
     - cron: "23 6 * * *"
   workflow_dispatch:
 
+# Read-only token: the build only checks out code, and the cache needs no token permission.
+permissions:
+  contents: read
+
 jobs:
   detect:
     runs-on: ubuntu-latest
