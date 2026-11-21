@@ -42,6 +42,6 @@ the way before you write it.
    raised when a release is made.
 6. Say which board you tried it on, and whether on a real screen or only on the bench.
 
-GitHub runs the unit tests, Tessera's check, a secret scan and the firmware builds on every pull request; they must
-pass before it is merged. By sending a pull request you agree that your change is released under the MIT license of
+The maintainer starts the checks on a pull request (the unit tests, Tessera's check, a secret scan and the firmware
+builds), merges it and makes the releases. They must pass before it is merged. By sending a pull request you agree that your change is released under the MIT license of
 this repository.
