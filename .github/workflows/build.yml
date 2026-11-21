@@ -15,7 +15,7 @@ on:
   workflow_dispatch:
     inputs:
       tessera_ref:
-        description: Tessera ref to build against (a screens-v* tag or a branch); empty for the newest release
+        description: Tessera ref to build against (a screens-v* tag, main or dev); empty for the newest release
         default: ""
       esphome:
         description: ESPHome version; empty for the one of that Tessera's app
@@ -58,6 +58,12 @@ jobs:
                   | sed 's#.*refs/tags/##' | sort -V | tail -1)
           fi
           [ -n "$ref" ] || { echo "No Tessera release found"; exit 1; }
+          # Only Tessera's own code: its release tags and its main and dev branches, never a pull request's ref.
+          case "$ref" in
+            main|dev) ;;
+            screens-v*) printf '%s' "$ref" | grep -Eq '^screens-v[0-9][0-9.]*$' || { echo "Not a Tessera release tag: $ref"; exit 1; } ;;
+            *) echo "Tessera ref must be a screens-v* tag, main or dev, not: $ref"; exit 1 ;;
+          esac
           echo "ref=$ref" >> "$GITHUB_OUTPUT"
           echo "Tessera: $ref"
       - uses: actions/checkout@v4
