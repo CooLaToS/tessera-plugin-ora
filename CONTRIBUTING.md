@@ -14,6 +14,10 @@ response time and not every idea gets built.
 
 To agree with an existing issue, add a 👍 reaction instead of a "me too" comment.
 
+## Security problems
+
+Do not open a public issue: see [SECURITY.md](SECURITY.md) to report it privately.
+
 ## Tried it on your screen?
 
 Open a "Tried it on my screen" issue, good or bad. It feeds the "Tried on" list in the README.
