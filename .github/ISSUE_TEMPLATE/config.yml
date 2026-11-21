@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: A problem with Tessera itself (also with its own clock face)
+    url: https://github.com/MaxGramser/homeassistant_espscreen/issues
+    about: Tessera's bugs go to Tessera's repository.
+  - name: Questions and Tessera help
+    url: https://tessera-maxgramser.on-forge.com/community
+    about: Tessera's community on its website.
+  - name: Tessera manual
+    url: https://tessera-maxgramser.on-forge.com/docs/
+    about: Setup, screens and troubleshooting.

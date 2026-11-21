@@ -68,7 +68,7 @@ says otherwise. Under each one, the options that make it.
 - On a large screen (7 and 10 inch) the clock stays in the middle at three times the digits' own size instead of
   filling the glass: larger, the scaled digits show their pixels.
 
-Tried it on another screen? Tell me in an [issue](https://github.com/CooLaToS/tessera-plugin-ora/issues) how it looks.
+Tried it on another screen? Tell me how it looks in a ["Tried it on my screen" issue](https://github.com/CooLaToS/tessera-plugin-ora/issues/new/choose).
 
 ## Privacy
 
@@ -112,6 +112,13 @@ repository (or `TESSERA_PLUGINS=<path>`), its bench set up once (`python3 tools/
 On GitHub, `check.yml` runs the unit tests, Tessera's check and a secret scan, `build.yml` the firmware builds (at
 every change and every Monday), `tessera-watch.yml` builds again the day a new Tessera release comes out, and
 `release.yml` publishes a release from a `v*` tag only when the check and the builds pass.
+
+## Bugs, ideas and pull requests
+
+Found a bug, tried Ora on a new screen or have an idea? Open an
+[issue](https://github.com/CooLaToS/tessera-plugin-ora/issues/new/choose); the forms ask for what is needed. Pull
+requests for fixes, translations and small improvements are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) first:
+it has the rules and the checks to run.
 
 ## Credits
 

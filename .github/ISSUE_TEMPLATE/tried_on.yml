@@ -1,0 +1,42 @@
+name: Tried it on my screen
+description: Ora on a screen not yet in the README's "Tried on" list, good or bad.
+labels: [tried-on]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks! Every report helps the "Tried on" list in the README. If something looks wrong, a bug report is fine too.
+  - type: input
+    id: screen
+    attributes:
+      label: Screen, Tessera and firmware version
+      placeholder: "Waveshare ESP32-S3-Touch-LCD-7, Tessera 0.4.99, firmware 0.62.0"
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Ora version
+      placeholder: "1.0.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: result
+    attributes:
+      label: How it looks
+      options:
+        - Works and looks right
+        - Works, but something looks off
+        - Does not show or does not build
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: What you tried
+      description: The styles, sizes and colours you tried, and anything that looked off.
+  - type: textarea
+    id: photo
+    attributes:
+      label: Photo (optional)
+      description: A photo of the screen. Drag and drop it here.

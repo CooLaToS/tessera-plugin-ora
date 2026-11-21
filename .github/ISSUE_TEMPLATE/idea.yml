@@ -1,0 +1,36 @@
+name: Idea
+description: Something new for Ora, or a change.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **A hobby project.** Not every idea gets built. Ora is a clock face, so ideas that fit the clock and the line
+        under it have the best chance. A new screen or a change to Tessera itself belongs on
+        [Tessera's wishlist](https://tessera-maxgramser.on-forge.com/wishlist).
+
+        One idea per issue. To support an existing idea, add a 👍 reaction instead of a comment.
+  - type: textarea
+    id: idea
+    attributes:
+      label: What you would like
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: What it is for
+      description: The situation where you miss it. This helps to find the simplest way.
+    validations:
+      required: true
+  - type: textarea
+    id: picture
+    attributes:
+      label: Sketch or example (optional)
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before you send it
+      options:
+        - label: I searched the open and closed issues for the same idea.
+          required: true

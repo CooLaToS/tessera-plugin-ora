@@ -1,0 +1,71 @@
+name: Bug report
+description: Ora shows something wrong, or does not build.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **A hobby project.** Ora is made in my spare time, for free and without warranty. There is no guaranteed
+        response time. Issues are for bugs, screen reports and concrete ideas, not for chatting.
+
+        **Is it Ora or Tessera?** Choose Tessera's own clock under **Face** in the Screensaver card. If the problem stays,
+        it belongs to Tessera: report it at [MaxGramser/homeassistant_espscreen](https://github.com/MaxGramser/homeassistant_espscreen/issues).
+        **No weather icon?** That is a known Tessera issue up to 0.4.99, see "Good to know" in the README.
+
+        One problem per issue. To agree with an existing issue, add a 👍 reaction instead of a comment.
+  - type: input
+    id: version
+    attributes:
+      label: Ora version
+      description: Shown on Tessera's Plugins page.
+      placeholder: "1.0.0"
+    validations:
+      required: true
+  - type: input
+    id: screen
+    attributes:
+      label: Screen, Tessera and firmware version
+      description: The board, the Tessera add-on version and the firmware version (screen's Settings).
+      placeholder: "Guition ESP32-S3-4848S040, Tessera 0.4.99, firmware 0.62.0"
+    validations:
+      required: true
+  - type: textarea
+    id: options
+    attributes:
+      label: Ora's options
+      description: Colours, style, size, date, night colour, and the entities in the clock's row. A screenshot of the Clock drawer works too.
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happens
+      description: What the screen shows, and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: How to make it happen
+      placeholder: |
+        1. Choose Ora, style Outline, size Stacked
+        2. Let the screen go to standby
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Photo, build log or screen log
+      description: A photo of the screen, or the log from Firmware & USB in Tessera. Remove tokens and passwords.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before you send it
+      options:
+        - label: I use the newest version of Ora.
+          required: true
+        - label: The problem is gone with Tessera's own clock face (so it is Ora, not Tessera).
+          required: true
+        - label: I searched the open and closed issues for the same problem.
+          required: true
