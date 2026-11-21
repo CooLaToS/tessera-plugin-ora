@@ -1,0 +1,13 @@
+# Keeps the GitHub actions in .github/workflows up to date: one grouped pull request a month at most.
+# The maintainer reviews and merges it; nothing merges by itself.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns: ["*"]
+    commit-message:
+      prefix: CI
