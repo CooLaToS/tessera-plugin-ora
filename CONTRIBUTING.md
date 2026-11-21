@@ -36,8 +36,8 @@ the way before you write it.
      must print `ora: ok`;
    - `python3 ../tessera-plugins/tools/preview.py . --strict` after any change to the C++, the manifest or
      `preview.yaml`, until it ends without a warning.
-4. Put new or changed texts in both `translations/en.json` and `translations/el.json` (ask in the pull request if you
-   need help with the Greek).
+4. Put new or changed texts in `translations/en.json`. No need to speak Greek: add them to `translations/el.json` if
+   you can, otherwise leave it and the Greek is added before the merge.
 5. Say what changed for users in the README and `CHANGELOG.md`. Leave the version in `tessera-plugin.yaml` alone: it is
    raised when a release is made.
 6. Say which board you tried it on, and whether on a real screen or only on the bench.
