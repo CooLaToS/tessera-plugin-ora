@@ -34,7 +34,7 @@ jobs:
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
           echo "Newest Tessera: $tag"
       - name: What was built last
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6
         with:
           path: last-built
           key: tessera-last-built-${{ steps.latest.outputs.tag }}
@@ -60,7 +60,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: echo "${{ needs.detect.outputs.tag }}" > last-built
-      - uses: actions/cache/save@v4
+      - uses: actions/cache/save@v6
         with:
           path: last-built
           key: tessera-last-built-${{ needs.detect.outputs.tag }}
