@@ -2,8 +2,8 @@
 # as the glass allows, in colours you pick, with a night colour. Every field: docs/MANIFEST.md of tessera-plugins.
 # Words are keys into translations/en.json, part "app".
 id: ora
-version: 1.0.0
-api: '0.14'
+version: 1.0.1
+api: '0.27'
 icon: clock-outline
 maintainer: CooLaToS
 license: MIT

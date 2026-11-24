@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.1
+- Colours only from the plugin API's theme roles: the Tessera mark's four colours, the alert tone, the ink and the
+  instrument's dark ground, alone or mixed. Ora no longer borrows the roles of Tessera's own cards (Bauhaus, energy,
+  bedside, camera), so a change to one of those cards no longer changes Ora or breaks its build. Gold, orange, red,
+  pink and teal are mixes now and look a shade different; red is a little brighter, teal a little bluer.
+- The log of each item of the clock's row is verbose now, not debug: a normal log stays quiet at every update.
+- Needs a screen with plugin API 0.27 or newer (the instrument's ground).
+
 ## 1.0.0
 - First version: a face of the screensaver's clock. Hours and minutes in two boxes (flip cards, outline or plain),
   Large, Stacked or Normal; fifteen colours (wood tones and mint among them) with two tones, a box colour of their

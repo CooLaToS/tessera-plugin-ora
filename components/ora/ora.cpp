@@ -19,11 +19,12 @@ namespace L = ora_logic;
 // entities (a weather entity shows its condition: sun, cloud, rain), and the outside temperature. The logic (choices,
 // texts, places) is in ora_logic.h, tested on a computer; this file only draws.
 //
-// Colours are theme roles, as the plugin rules ask (never a colour as a number). A saver is drawn in the dark look,
-// so each colour is the dark value of its role: gold #C9932F, amber #FFC107, orange #FF9800, red #B23A26,
-// pink #B54C9D, purple #926BC7, blue #009FE3, teal #5BD0CC, green #4CAF50, white, grey #888888; champagne, oak,
-// walnut and mint are mixes of those (#D1B37C, #B78E53, #7A5F37, #B0D7D5). The screen moves the whole saver a
-// millimetre every minute, so it stands still itself.
+// Colours are theme roles of the plugin API (never a colour as a number, never a role of Tessera's own cards): the four
+// colours of the Tessera mark, the alert tone, the ink and the instrument's dark ground, alone or mixed. A saver is
+// drawn in the dark look, so in it: amber #FFC107, blue #009FE3, purple #926BC7, green #4CAF50, white the ink, grey
+// #8A8A8A; gold, orange, red, pink and teal are mixes (#C6912C, #FCA012, #AF342D, #B25D96, #62B9CE), and champagne,
+// oak, walnut and mint mixes of those (#B6925B, #795F37). The screen moves the whole saver a millimetre every minute, so it stands still
+// itself.
 
 static const char *const TAG = "ora";
 
@@ -31,29 +32,41 @@ namespace {
 
 constexpr int MAX_ITEMS = 4;  // the clock's row holds at most four entities (Tessera's ITEMS_MAX)
 
-lv_color_t black() { return ui::color(theme::CAMERA_PAGE); }
-
-// Light wood: the orange of solar power softened with the bedside grey (#B78E53); walnut is it darker (#7A5F37).
-lv_color_t oak() { return lv_color_mix(ui::color(theme::ENERGY_SOLAR), ui::color(theme::BEDSIDE), 100); }
+// The dark ground of an instrument's face, dark in both looks (#0B1119): the near black of the boxes and the hinge.
+lv_color_t black() { return ui::color(theme::INSTRUMENT); }
+// Home Assistant's red as the look draws it, and the amber of the Tessera mark.
+lv_color_t alert() { return ui::tone_color(tessera::Tone::ALERT, theme::INK); }
+lv_color_t amber() { return ui::color(theme::MARK_AMBER); }
+lv_color_t gold() { return lv_color_mix(lv_color_mix(amber(), alert(), 135), ui::color(theme::MARK_GREEN), 180); }
+lv_color_t orange() { return lv_color_mix(amber(), alert(), 190); }
+lv_color_t teal() {
+  return lv_color_mix(lv_color_mix(ui::color(theme::MARK_BLUE), ui::color(theme::MARK_GREEN), 205), ui::color(theme::INK),
+                      150);
+}
+lv_color_t grey() { return ui::color(theme::SUBTLE); }
+// Light wood: orange softened with grey (#B6925B). Walnut: orange darkened, then greyed (#795F37); darkened with the
+// instrument's ground alone it turns cold.
+lv_color_t oak() { return lv_color_mix(orange(), grey(), 100); }
+lv_color_t walnut() { return lv_color_mix(lv_color_mix(orange(), black(), 110), grey(), 180); }
 
 // The colour a person picked, as the glass shows it; `same` for SAME (and anything that is no colour).
 lv_color_t paint(L::Colour c, lv_color_t same) {
   switch (c) {
-    case L::Colour::GOLD: return ui::color(theme::BAUHAUS_YELLOW);
-    case L::Colour::CHAMPAGNE: return lv_color_mix(ui::color(theme::INK), ui::color(theme::BAUHAUS_YELLOW), 115);
-    case L::Colour::AMBER: return ui::color(theme::MARK_AMBER);
-    case L::Colour::ORANGE: return ui::color(theme::ENERGY_SOLAR);
-    case L::Colour::RED: return ui::color(theme::BAUHAUS_RED);
-    case L::Colour::PINK: return ui::color(theme::ENERGY_DEVICE_3);
+    case L::Colour::GOLD: return gold();
+    case L::Colour::CHAMPAGNE: return lv_color_mix(ui::color(theme::INK), gold(), 115);
+    case L::Colour::AMBER: return amber();
+    case L::Colour::ORANGE: return orange();
+    case L::Colour::RED: return lv_color_mix(alert(), black(), 180);
+    case L::Colour::PINK: return lv_color_mix(ui::color(theme::MARK_PURPLE), alert(), 170);
     case L::Colour::PURPLE: return ui::color(theme::MARK_PURPLE);
     case L::Colour::BLUE: return ui::color(theme::MARK_BLUE);
-    case L::Colour::TEAL: return ui::color(theme::ENERGY_DEVICE_4);
+    case L::Colour::TEAL: return teal();
     case L::Colour::GREEN: return ui::color(theme::MARK_GREEN);
     case L::Colour::OAK: return oak();
-    case L::Colour::WALNUT: return lv_color_mix(oak(), black(), 170);
-    case L::Colour::MINT: return lv_color_mix(ui::color(theme::INK), ui::color(theme::ENERGY_DEVICE_4), 170);
+    case L::Colour::WALNUT: return walnut();
+    case L::Colour::MINT: return lv_color_mix(ui::color(theme::INK), teal(), 170);
     case L::Colour::WHITE: return ui::color(theme::INK);
-    case L::Colour::GREY: return ui::color(theme::BEDSIDE);
+    case L::Colour::GREY: return grey();
     case L::Colour::SOFT: return ui::color(theme::INK_SOFT);
     default: return same;
   }
@@ -85,7 +98,7 @@ class OraSaver : public tessera::Saver {
     seconds_ = c.options["seconds"] | true;
 
     const L::Ink ink = L::ink_for(digits, minutes, night, c.night);
-    lv_color_t hours_ink = paint(ink.hours, ui::color(theme::BAUHAUS_YELLOW));
+    lv_color_t hours_ink = paint(ink.hours, gold());
     lv_color_t minutes_ink = paint(ink.minutes, hours_ink);
     if (ink.dimmed) {
       hours_ink = deeper(hours_ink);
@@ -172,7 +185,7 @@ class OraSaver : public tessera::Saver {
       if (count == MAX_ITEMS) break;
       next[count].icon = item["icon"] | 0u;
       std::snprintf(next[count].text, sizeof(next[count].text), "%s", item["text"] | "");
-      ESP_LOGD(TAG, "row item %d: icon %05X, text '%s'", count, static_cast<unsigned>(next[count].icon), next[count].text);
+      ESP_LOGV(TAG, "row item %d: icon %05X, text '%s'", count, static_cast<unsigned>(next[count].icon), next[count].text);
       ++count;
     }
     if (count != count_ || std::memcmp(next, items_, sizeof(items_)) != 0) {
@@ -245,7 +258,7 @@ class OraSaver : public tessera::Saver {
     if (style_ == L::Style::CARDS) {
       // The hinge across the middle of the digits, where the card folds: a child of the digits, so it lies over them
       // and scales with them, as in Tessera's Flip clock.
-      lv_obj_t *hinge = ui::block(digits, theme::CAMERA_PAGE);
+      lv_obj_t *hinge = ui::block(digits, theme::INSTRUMENT);
       lv_obj_set_style_radius(hinge, 0, 0);
       const int h = std::max(1, ui::px(2));
       lv_obj_set_size(hinge, lw, h);

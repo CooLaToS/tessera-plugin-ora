@@ -71,7 +71,7 @@ says otherwise. Under each one, the options that make it.
 - **The firmware build** on GitHub (`.github/workflows/build.yml`) compiles Ora into the newest Tessera release for the
   CYD (ESP32, 4 MB), the Guition 4-inch (ESP32-S3) and the Guition 10.1-inch V3 (ESP32-P4), at every change and
   every Monday.
-- Every screen Tessera supports can run it (`boards: any`) once it has plugin API 0.14. Screens that never go into
+- Every screen Tessera supports can run it (`boards: any`) once it has plugin API 0.27. Screens that never go into
   standby, such as the Waveshare 4.3-inch, show no screensaver at all, so no Ora either.
 - On a large screen (7 and 10 inch) the clock stays in the middle at three times the digits' own size instead of
   filling the glass: larger, the scaled digits show their pixels.
