@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.1.0
+- Large and Stacked draw the time in Tessera's own clock digits (plugin API 0.29): the flip clock's and the bedside
+  clock's, the largest that fits the glass at its own size. The digits are sharp now instead of a smaller font scaled
+  up, they fill the 7 and 10-inch screens instead of stopping at three times, and there is no scaled layer to redraw
+  each minute (which on a board without PSRAM, the CYD, came out of the small internal memory). Where no font fits
+  well, the next larger one is drawn a little smaller. The seconds dot, the hinge and the outline grow with the digits.
+- Before the screen's clock is set the boxes stay empty: the clock digits hold no dash.
+- Needs a screen with plugin API 0.29 or newer (Tessera 0.4.102, firmware 0.64.0), which also hands a clock face the
+  row's icons (the weather icon, MaxGramser/homeassistant_espscreen#448).
+
 ## 1.0.1
 - Colours only from the plugin API's theme roles: the Tessera mark's four colours, the alert tone, the ink and the
   instrument's dark ground, alone or mixed. Ora no longer borrows the roles of Tessera's own cards (Bauhaus, energy,

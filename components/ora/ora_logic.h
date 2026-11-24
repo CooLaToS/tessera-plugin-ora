@@ -216,19 +216,28 @@ inline Style style_of(const char *name) {
 }
 
 // What the glass and its fonts measure, in pixels.
+struct Digits {
+  int w;  // "88" in the font
+  int h;  // its line height
+};
+constexpr int MAX_FONTS = 3;  // the screen's digit fonts, largest first; the last is the one Normal takes
+
 struct Metrics {
-  int width, height;   // the glass
-  int digits_w;        // "88" in the screen's largest digits
-  int digits_h;        // their line height
-  int row_h;           // the line under the clock (date, row, temperature); 0 when it shows nothing
-  int suffix_w;        // AM or PM beside the minutes; 0 on a 24-hour screen
+  int width, height;          // the glass
+  Digits fonts[MAX_FONTS];    // the digit fonts, largest first (two may measure the same: a board without a larger one)
+  int font_count;
+  int row_h;                  // the line under the clock (date, row, temperature); 0 when it shows nothing
+  int suffix_w;               // AM or PM beside the minutes; 0 on a 24-hour screen
   int pad, gap, margin, space;
 };
 
 struct Box { int x, y, w, h; };
 
 struct Layout {
-  int scale;            // 256 is the font's own size
+  int font;             // which of Metrics::fonts the digits take
+  int scale;            // the font drawn at scale/256 of its size; 256 (no transform) wherever a font fits
+  int gap;              // between the boxes, and above the line under them
+  int grow;             // how large the digits are against the last font (Normal's) at its size, 256 is the same
   Box hours, minutes;   // the two boxes
   int colon_x, colon_y; // the middle of the dot (or the colon's two dots)
   bool colon_across;    // the colon's two dots side by side (stacked) instead of one above the other
@@ -239,46 +248,92 @@ struct Layout {
 inline int clamp(int v, int lo, int hi) { return std::max(lo, std::min(v, hi)); }
 
 // The digits grow at most three times their font's size (256 is 1x): at four the 10-inch screens showed their pixels.
+// Only when even the largest font is too small for the room, which the page's own digits hardly ever are.
 constexpr int MAX_SCALE = 768;
+// A font at its own size is taken when it fills at least four fifths of the room (the room is at most 5/4 of it).
+constexpr int FILLS = 320;
+
+struct Pick { int font, scale; };
+
+// How far a font fits a room of avail_w x avail_h for "88", 256 is exactly.
+inline int fit_of(const Digits &f, int avail_w, int avail_h) {
+  return std::min(std::max(avail_w, 1) * 256 / std::max(1, f.w), std::max(avail_h, 1) * 256 / std::max(1, f.h));
+}
+
+// The font, from how far each fits (fit[], largest font first): the largest that fits at its own size and fills the
+// room well (drawn without a transform: sharp, and no layer of its own on every redraw); else the smallest that is too
+// large, drawn smaller (a font made smaller stays sharp); else, when every font is too small, the largest, larger.
+inline Pick pick_fit(const int *fit, int n) {
+  n = clamp(n, 1, MAX_FONTS);
+  for (int i = 0; i < n; ++i)
+    if (fit[i] >= 256 && fit[i] <= FILLS) return {i, 256};
+  for (int i = n - 1; i >= 0; --i)
+    if (fit[i] < 256) return {i, std::max(fit[i], 1)};
+  return {0, std::min(fit[0], MAX_SCALE)};
+}
+
+// The same for one room that does not depend on the font.
+inline Pick pick(const Digits *fonts, int n, int avail_w, int avail_h) {
+  n = clamp(n, 1, MAX_FONTS);
+  int fit[MAX_FONTS];
+  for (int i = 0; i < n; ++i) fit[i] = fit_of(fonts[i], avail_w, avail_h);
+  return pick_fit(fit, n);
+}
+
+// The gap between the two boxes (and around the line under them) grows with the digits, as on a flip clock: an eighth
+// of their height, the screen's own gap at least. Room for the seconds dot, and for a plain colon clear of the digits.
+inline int gap_for(const Metrics &m, int digits_h) { return std::max(m.gap, digits_h / 8); }
 
 inline Layout layout(const Metrics &m, Size size) {
   Layout l{};
-  const int row = m.row_h ? m.row_h + m.gap : 0;
-  const int dw = std::max(1, m.digits_w), dh = std::max(1, m.digits_h);
+  const int n = clamp(m.font_count, 1, MAX_FONTS);
   const int suffix = m.suffix_w ? m.suffix_w + m.space : 0;
 
-  l.scale = 256;
-  if (size == Size::LARGE) {
-    const int avail_w = (m.width - 2 * m.margin - m.gap - suffix) / 2 - 2 * m.pad;
-    const int avail_h = m.height - 2 * m.margin - row - 2 * m.pad;
-    l.scale = clamp(std::min(avail_w * 256 / dw, avail_h * 256 / dh), 256, MAX_SCALE);
-  } else if (size == Size::STACKED) {
-    const int avail_w = m.width - 2 * m.margin - suffix - 2 * m.pad;
-    const int avail_h = (m.height - 2 * m.margin - row - m.gap) / 2 - 2 * m.pad;
-    l.scale = clamp(std::min(avail_w * 256 / dw, avail_h * 256 / dh), 256, MAX_SCALE);
+  // Each font in the room it leaves itself: its gap is part of what it takes.
+  Pick p{n - 1, 256};
+  if (size != Size::NORMAL) {
+    int fit[MAX_FONTS];
+    for (int i = 0; i < n; ++i) {
+      const int gap = gap_for(m, m.fonts[i].h), row = m.row_h ? m.row_h + gap : 0;
+      if (size == Size::LARGE)
+        fit[i] = fit_of(m.fonts[i], (m.width - 2 * m.margin - gap - suffix) / 2 - 2 * m.pad,
+                        m.height - 2 * m.margin - row - 2 * m.pad);
+      else
+        fit[i] = fit_of(m.fonts[i], m.width - 2 * m.margin - suffix - 2 * m.pad,
+                        (m.height - 2 * m.margin - row - gap) / 2 - 2 * m.pad);
+    }
+    p = pick_fit(fit, n);
   }
+  l.font = p.font;
+  l.scale = p.scale;
+  const int dw = std::max(1, m.fonts[p.font].w), dh = std::max(1, m.fonts[p.font].h);
+  l.grow = std::max(1, dh * l.scale / std::max(1, m.fonts[n - 1].h));
+  // The gap the font was measured with (Normal: the screen's own); a font drawn smaller keeps it, which only adds room.
+  l.gap = size == Size::NORMAL ? m.gap : gap_for(m, dh);
+  const int gap = l.gap, row = m.row_h ? m.row_h + gap : 0;
   const int cw = dw * l.scale / 256 + 2 * m.pad, ch = dh * l.scale / 256 + 2 * m.pad;
   const bool stacked = size == Size::STACKED;
-  const int block_w = stacked ? cw : 2 * cw + m.gap;
-  const int block_h = stacked ? 2 * ch + m.gap : ch;
+  const int block_w = stacked ? cw : 2 * cw + gap;
+  const int block_h = stacked ? 2 * ch + gap : ch;
 
   const int y = (m.height - block_h - row) / 2;
   const int left = (m.width - block_w - suffix) / 2;
   l.hours = {left, y, cw, ch};
-  l.minutes = stacked ? Box{left, y + ch + m.gap, cw, ch} : Box{left + cw + m.gap, y, cw, ch};
+  l.minutes = stacked ? Box{left, y + ch + gap, cw, ch} : Box{left + cw + gap, y, cw, ch};
   l.colon_across = stacked;
-  l.colon_x = stacked ? left + cw / 2 : left + cw + m.gap / 2;
-  l.colon_y = stacked ? y + ch + m.gap / 2 : y + ch / 2;
+  l.colon_x = stacked ? left + cw / 2 : left + cw + gap / 2;
+  l.colon_y = stacked ? y + ch + gap / 2 : y + ch / 2;
   l.suffix_x = l.minutes.x + l.minutes.w + m.space;
   l.suffix_y = l.minutes.y + l.minutes.h - m.pad;
-  l.row_y = y + block_h + m.gap;
+  l.row_y = y + block_h + (m.row_h ? gap : 0);
   return l;
 }
 
-// The size of the seconds dot: it grows with the digits, and between two boxes it stays within the gap.
-inline int dot_size(int base, int scale, int gap, bool boxes) {
-  int dot = base * scale / 256;
-  if (boxes) dot = std::min(dot, gap * 6 / 10);
+// The size of the seconds dot: it grows with the digits (grow, Layout), and stays within the gap: between two boxes
+// with room around it, as a colon of two dots without boxes clear of the digits beside it.
+inline int dot_size(int base, int grow, int gap, bool boxes) {
+  int dot = base * grow / 256;
+  dot = std::min(dot, boxes ? gap * 6 / 10 : gap * 9 / 10);
   return std::max(dot, 2);
 }
 

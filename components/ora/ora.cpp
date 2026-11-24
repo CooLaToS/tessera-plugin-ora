@@ -30,7 +30,9 @@ static const char *const TAG = "ora";
 
 namespace {
 
-constexpr int MAX_ITEMS = 4;  // the clock's row holds at most four entities (Tessera's ITEMS_MAX)
+constexpr int MAX_ITEMS = 4;
+// The digit fonts, largest first, as L::Metrics::fonts takes them.
+constexpr Font DIGIT_FONTS[L::MAX_FONTS] = {Font::DIGITS_PAGE, Font::DIGITS_LARGE, Font::DIGITS};  // the clock's row holds at most four entities (Tessera's ITEMS_MAX)
 
 // The dark ground of an instrument's face, dark in both looks (#0B1119): the near black of the boxes and the hinge.
 lv_color_t black() { return ui::color(theme::INSTRUMENT); }
@@ -123,8 +125,12 @@ class OraSaver : public tessera::Saver {
     L::Metrics m{};
     m.width = c.width;
     m.height = c.height;
-    m.digits_w = ui::text_width("88", Font::DIGITS);
-    m.digits_h = ui::line_height(Font::DIGITS);
+    // The screen's digit fonts, largest first (plugin API 0.29): the bedside clock's, the flip clock's, a setpoint's.
+    // Large and Stacked take the largest that fits the glass at its own size, so the digits are sharp and drawn
+    // without a transform; Normal takes the last.
+    for (int i = 0; i < L::MAX_FONTS; ++i)
+      m.fonts[i] = {ui::text_width("88", DIGIT_FONTS[i]), ui::line_height(DIGIT_FONTS[i])};
+    m.font_count = L::MAX_FONTS;
     m.row_h = row_h_;
     m.suffix_w = clock.suffix.empty() ? 0 : ui::text_width(clock.suffix, Font::BODY);
     m.pad = ui::mm(3);
@@ -132,8 +138,9 @@ class OraSaver : public tessera::Saver {
     m.margin = margin_;
     m.space = ui::px(6);
     layout_ = L::layout(m, size);
-    digits_w_ = m.digits_w;
-    digits_h_ = m.digits_h;
+    digits_font_ = DIGIT_FONTS[layout_.font];
+    digits_w_ = m.fonts[layout_.font].w;
+    digits_h_ = m.fonts[layout_.font].h;
 
     // The boxes: graphite flip cards, tinted with the hours' colour, or in a colour of their own; an outline is a line
     // in that colour (the hours' own for graphite and tint) on the black glass.
@@ -147,7 +154,7 @@ class OraSaver : public tessera::Saver {
     minutes_ = box(c.parent, layout_.minutes, fill, line, minutes_ink);
 
     // The seconds: one dot between two boxes, a colon of two dots without boxes.
-    const int dot = L::dot_size(ui::mm(2), layout_.scale, m.gap, style_ != L::Style::PLAIN);
+    const int dot = L::dot_size(ui::mm(2), layout_.grow, layout_.gap, style_ != L::Style::PLAIN);
     if (style_ == L::Style::PLAIN) {
       const int apart = layout_.colon_across ? layout_.hours.w / 8 : layout_.hours.h / 6;
       const int dx = layout_.colon_across ? apart : 0, dy = layout_.colon_across ? 0 : apart;
@@ -198,8 +205,10 @@ class OraSaver : public tessera::Saver {
 
   void on_tick(uint32_t epoch) override {
     if (!epoch) {  // the screen's clock is not set yet
-      ui::set_text(lv_obj_get_child(hours_, 0), "--");
-      ui::set_text(lv_obj_get_child(minutes_, 0), "--");
+      // The clocks' digit fonts hold no dash: their boxes stay empty until the time is known.
+      const char *unset = ui::covers("--", digits_font_) ? "--" : "";
+      ui::set_text(lv_obj_get_child(hours_, 0), unset);
+      ui::set_text(lv_obj_get_child(minutes_, 0), unset);
       return;
     }
     if (seconds_ && (epoch % 2 == 0) == lv_obj_has_flag(dot_a_, LV_OBJ_FLAG_HIDDEN)) {
@@ -239,14 +248,17 @@ class OraSaver : public tessera::Saver {
       lv_obj_set_style_bg_opa(card, LV_OPA_TRANSP, 0);
       if (style_ == L::Style::OUTLINE) {
         lv_obj_set_style_border_color(card, line, 0);
-        lv_obj_set_style_border_width(card, std::max(2, ui::px(2) * layout_.scale / 256), 0);
+        lv_obj_set_style_border_width(card, std::max(2, ui::px(2) * layout_.grow / 256), 0);
         lv_obj_set_style_border_opa(card, LV_OPA_COVER, 0);
       }
     }
-    // The label is as wide as the card once scaled, so the hinge inside it spans the card; scaled about its middle.
-    lv_obj_t *digits = ui::label(card, Font::DIGITS, theme::INK);
+    // The label is as wide as the card once scaled, so the hinge inside it spans the card; scaled about its middle,
+    // which it only is where no font fits the glass at its own size. A font drawn smaller keeps its label as wide as
+    // its digits, so the label stays inside the card, and the hinge reaches past it to the card's edges.
+    lv_obj_t *digits = ui::label(card, digits_font_, theme::INK);
     lv_obj_set_style_text_color(digits, ink, 0);
-    const int lw = b.w * 256 / layout_.scale;
+    const int span = b.w * 256 / layout_.scale;  // the card's width before the scale
+    const int lw = layout_.scale < 256 ? std::min(span, digits_w_) : span;
     lv_obj_set_width(digits, lw);
     lv_obj_set_style_text_align(digits, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_set_pos(digits, (b.w - lw) / 2, (b.h - digits_h_) / 2);
@@ -257,12 +269,13 @@ class OraSaver : public tessera::Saver {
     }
     if (style_ == L::Style::CARDS) {
       // The hinge across the middle of the digits, where the card folds: a child of the digits, so it lies over them
-      // and scales with them, as in Tessera's Flip clock.
+      // and scales with them, as in Tessera's Flip clock. As thick as the digits are large against a setpoint's.
       lv_obj_t *hinge = ui::block(digits, theme::INSTRUMENT);
       lv_obj_set_style_radius(hinge, 0, 0);
-      const int h = std::max(1, ui::px(2));
-      lv_obj_set_size(hinge, lw, h);
-      lv_obj_set_pos(hinge, 0, (digits_h_ - h) / 2);
+      const int h = std::max(1, ui::px(2) * layout_.grow / layout_.scale);
+      lv_obj_set_size(hinge, span, h);
+      lv_obj_set_pos(hinge, (lw - span) / 2, (digits_h_ - h) / 2);
+      if (span > lw) lv_obj_add_flag(digits, LV_OBJ_FLAG_OVERFLOW_VISIBLE);
     }
     return card;
   }
@@ -349,7 +362,7 @@ class OraSaver : public tessera::Saver {
   L::Style style_ = L::Style::CARDS;
   L::DateFormat format_ = L::DateFormat::SHORT;
   L::Row row_ = L::Row::ICONS;
-  Font row_font_ = Font::TITLE, icon_font_ = Font::ICON_SMALL;
+  Font row_font_ = Font::TITLE, icon_font_ = Font::ICON_SMALL, digits_font_ = Font::DIGITS;
   bool seconds_ = true, leading_zero_ = true;
   int width_ = 0, digits_w_ = 0, digits_h_ = 0, day_ = 0, row_h_ = 0, margin_ = 0, between_ = 0, count_ = 0;
   uint32_t minute_ = 0;

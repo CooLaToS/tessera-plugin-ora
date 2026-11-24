@@ -71,10 +71,8 @@ says otherwise. Under each one, the options that make it.
 - **The firmware build** on GitHub (`.github/workflows/build.yml`) compiles Ora into the newest Tessera release for the
   CYD (ESP32, 4 MB), the Guition 4-inch (ESP32-S3) and the Guition 10.1-inch V3 (ESP32-P4), at every change and
   every Monday.
-- Every screen Tessera supports can run it (`boards: any`) once it has plugin API 0.27. Screens that never go into
+- Every screen Tessera supports can run it (`boards: any`) once it has plugin API 0.29 (Tessera 0.4.102, firmware 0.64.0). Screens that never go into
   standby, such as the Waveshare 4.3-inch, show no screensaver at all, so no Ora either.
-- On a large screen (7 and 10 inch) the clock stays in the middle at three times the digits' own size instead of
-  filling the glass: larger, the scaled digits show their pixels.
 
 Tried it on another screen? Tell me how it looks in a ["Tried it on my screen" issue](https://github.com/CooLaToS/tessera-plugin-ora/issues/new/choose).
 
@@ -87,12 +85,9 @@ face: the time, the outside temperature and the entities you put in the clock's 
 
 - Any colour on any box stays readable: when the digits would not stand out enough from their box (red on blue, say),
   Ora darkens the box until they do.
-- The weather icon needs a Tessera release with the fix for
-  [MaxGramser/homeassistant_espscreen#448](https://github.com/MaxGramser/homeassistant_espscreen/issues/448): up to
-  Tessera 0.4.99 a plugin's clock face receives the row's icons as 0, so Ora shows the date and the temperature without
-  the icon. Nothing to change in Ora: the icon appears once Tessera hands it over.
-- Large and Stacked scale the screen's largest digits up (a plugin brings no font of its own), so they are a little
-  softer than the font's own size.
+- Large and Stacked draw the time in Tessera's own clock digits (the flip clock's and the bedside clock's, which every
+  screen carries already), the largest that fits the glass at its own size: sharp on every screen, up to the 10-inch.
+  Where none fits well, the next larger one is drawn a little smaller.
 - The night colour is chosen when the screensaver comes on. If the night hours begin while the clock is already showing,
   it changes the next time the screen goes to standby.
 - The screen moves the whole clock a millimetre every minute, so nothing stands on the same pixels for hours.

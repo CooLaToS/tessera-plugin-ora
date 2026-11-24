@@ -140,34 +140,43 @@ static bool apart(const Box &a, const Box &b) {
   return a.x + a.w <= b.x || b.x + b.w <= a.x || a.y + a.h <= b.y || b.y + b.h <= a.y;
 }
 
-// Screens of Tessera's catalog with fonts of their look (compact on the CYD, standard elsewhere): glass, the largest
-// digits' "88" and line, and the line under the clock. The numbers are close to what the bench measures; the layout
-// must hold for any of them.
-struct Screen { const char *name; int w, h, digits_w, digits_h, row_h, mm; };
+// Screens of Tessera's catalog with fonts of their look (compact on the CYD, standard elsewhere): glass, the digit
+// fonts in pixels (the bedside clock's, the flip clock's, a setpoint's: plugin API 0.29), the line under the clock and
+// a millimetre. "88" is about 1.09 of a font's size wide and its line 1.17 high, as the bench measures for DIGITS; the
+// layout must hold for any of them.
+struct Screen { const char *name; int w, h, page_px, large_px, digits_px, row_h, mm; };
 static const Screen SCREENS[] = {
-    {"cyd 320x240", 320, 240, 48, 46, 22, 5},
-    {"cyd portrait 240x320", 240, 320, 48, 46, 22, 5},
-    {"guition 480x480", 480, 480, 70, 75, 30, 7},
-    {"waveshare43 portrait 480x800", 480, 800, 70, 75, 30, 6},
-    {"waveshare43 800x480", 800, 480, 70, 75, 30, 6},
-    {"guition 7 1024x600", 1024, 600, 80, 86, 34, 6},
-    {"guition 10 1280x800", 1280, 800, 90, 96, 38, 6},
-    {"tab5 720x1280", 720, 1280, 90, 96, 38, 11},
+    {"cyd 320x240", 320, 240, 73, 73, 40, 22, 5},
+    {"cyd portrait 240x320", 240, 320, 73, 73, 40, 22, 5},
+    {"guition 480x480", 480, 480, 150, 150, 64, 30, 7},
+    {"waveshare43 portrait 480x800", 480, 800, 212, 150, 64, 30, 6},
+    {"waveshare43 800x480", 800, 480, 212, 150, 64, 30, 6},
+    {"guition 7 1024x600", 1024, 600, 300, 220, 64, 34, 6},
+    {"guition 10 1280x800", 1280, 800, 478, 270, 64, 38, 6},
+    {"tab5 720x1280", 720, 1280, 300, 200, 64, 38, 11},
 };
+
+static Digits digits_of(int px) { return {px * 109 / 100, px * 117 / 100}; }
+static Metrics metrics_of(const Screen &s, int row_h, int suffix) {
+  return {s.w, s.h, {digits_of(s.page_px), digits_of(s.large_px), digits_of(s.digits_px)}, 3, row_h, suffix,
+          3 * s.mm, 4 * s.mm, 4 * s.mm, 6};
+}
 
 static void layouts() {
   for (const Screen &s : SCREENS) {
     for (Size size : {Size::NORMAL, Size::LARGE, Size::STACKED}) {
       for (int row_h : {0, s.row_h}) {
         for (int suffix : {0, 30}) {
-          Metrics m{s.w, s.h, s.digits_w, s.digits_h, row_h, suffix, 3 * s.mm, 4 * s.mm, 4 * s.mm, 6};
+          const Metrics m = metrics_of(s, row_h, suffix);
           const Layout l = layout(m, size);
           const std::string what = std::string(s.name) + " size " + std::to_string(static_cast<int>(size)) + " row " +
                                    std::to_string(row_h) + " suffix " + std::to_string(suffix);
           const int before = failures;
-          // The scale: the font's own size at least, never more than the size allows.
-          CHECK(l.scale >= 256);
-          CHECK(l.scale <= (size == Size::NORMAL ? 256 : MAX_SCALE));
+          // The font: Normal takes the setpoint's digits at their size; the others a font at its size wherever one
+          // fits well, and never larger than three times.
+          CHECK(l.font >= 0 && l.font < 3);
+          CHECK(l.scale > 0 && l.scale <= MAX_SCALE);
+          if (size == Size::NORMAL) CHECK(l.font == 2 && l.scale == 256 && l.grow == 256);
           // The cards: on the glass, apart, the same size, in the order of reading.
           CHECK(inside(l.hours, s.w, s.h));
           CHECK(inside(l.minutes, s.w, s.h));
@@ -195,23 +204,34 @@ static void layouts() {
       }
     }
   }
-  // Large is larger than Normal on every screen, and fills a good part of the glass's width side by side.
+  // Large is larger than Normal on every screen, and drawn in a font at its own size: no transform on any of them.
   for (const Screen &s : SCREENS) {
-    Metrics m{s.w, s.h, s.digits_w, s.digits_h, s.row_h, 0, 3 * s.mm, 4 * s.mm, 4 * s.mm, 6};
+    const Metrics m = metrics_of(s, s.row_h, 0);
     const Layout normal = layout(m, Size::NORMAL), large = layout(m, Size::LARGE);
-    CHECK(large.hours.w >= normal.hours.w);
-    CHECK(large.scale > 256);
+    CHECK(large.hours.w > normal.hours.w);
+    CHECK(large.grow > 256);
   }
   // Two digits side by side are about twice as wide as tall: Large suits a square or wide glass, Stacked a tall one.
-  Metrics square{480, 480, 70, 75, 30, 0, 18, 24, 24, 6};
-  CHECK(layout(square, Size::LARGE).scale > layout(square, Size::STACKED).scale);
-  Metrics tall{480, 800, 70, 75, 30, 0, 18, 24, 24, 6};
-  CHECK(layout(tall, Size::STACKED).scale > layout(tall, Size::LARGE).scale);
-  Metrics wide{1280, 800, 90, 96, 38, 0, 18, 24, 24, 6};
-  CHECK(layout(wide, Size::LARGE).scale >= layout(wide, Size::STACKED).scale);
+  const Metrics square = metrics_of(SCREENS[2], 30, 0), tall = metrics_of(SCREENS[3], 30, 0),
+                wide = metrics_of(SCREENS[6], 38, 0);
+  CHECK(layout(square, Size::LARGE).grow > layout(square, Size::STACKED).grow);
+  CHECK(layout(tall, Size::STACKED).grow > layout(tall, Size::LARGE).grow);
+  CHECK(layout(wide, Size::LARGE).grow >= layout(wide, Size::STACKED).grow);
+  // The pick: a font at its size when it fills four fifths of the room, else the next larger made smaller, else the
+  // largest made larger (at most three times).
+  const Digits f[3] = {{200, 200}, {100, 100}, {50, 50}};
+  CHECK(pick(f, 3, 210, 210).font == 0 && pick(f, 3, 210, 210).scale == 256);
+  CHECK(pick(f, 3, 110, 300).font == 1 && pick(f, 3, 110, 300).scale == 256);
+  CHECK(pick(f, 3, 160, 160).font == 0 && pick(f, 3, 160, 160).scale == 160 * 256 / 200);
+  CHECK(pick(f, 3, 40, 40).font == 2 && pick(f, 3, 40, 40).scale < 256);
+  CHECK(pick(f, 3, 300, 300).font == 0 && pick(f, 3, 300, 300).scale == 300 * 256 / 200);
+  CHECK(pick(f, 3, 5000, 5000).font == 0 && pick(f, 3, 5000, 5000).scale == MAX_SCALE);
+  // Two fonts that measure the same (a board without a larger one) are one font.
+  const Digits same[3] = {{100, 100}, {100, 100}, {50, 50}};
+  CHECK(pick(same, 3, 105, 105).scale == 256);
   // Fonts that do not measure (0) do not divide by zero.
-  Metrics z{480, 480, 0, 0, 0, 0, 21, 28, 28, 6};
-  CHECK(layout(z, Size::LARGE).scale >= 256);
+  const Metrics z{480, 480, {{0, 0}, {0, 0}, {0, 0}}, 3, 0, 0, 21, 28, 28, 6};
+  CHECK(layout(z, Size::LARGE).scale > 0 && layout(z, Size::LARGE).grow > 0);
 }
 
 static void rows() {
@@ -287,7 +307,8 @@ static void contrasts() {
 static void dots() {
   CHECK(dot_size(14, 256, 28, true) == 14);
   CHECK(dot_size(14, 768, 28, true) <= 28 * 6 / 10);  // between cards it stays in the gap
-  CHECK(dot_size(14, 768, 28, false) == 42);           // a plain colon grows with the digits
+  CHECK(dot_size(14, 256, 28, false) == 14);           // a plain colon grows with the digits
+  CHECK(dot_size(14, 1100, 28, false) <= 28 * 9 / 10); // and stays clear of them
   CHECK(dot_size(0, 256, 28, true) >= 2);
 }
 
