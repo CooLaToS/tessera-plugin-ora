@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.1
+- The README's pictures and links point at GitHub, so they show on the Tessera Plugins page too (it does not resolve
+  relative paths).
+- "Tried on" says the real screens ran Ora 1.0 on Tessera 0.4.99.
+
 ## 1.1.0
 - Large and Stacked draw the time in Tessera's own clock digits (plugin API 0.29): the flip clock's and the bedside
   clock's, the largest that fits the glass at its own size. The digits are sharp now instead of a smaller font scaled

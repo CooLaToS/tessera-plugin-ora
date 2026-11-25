@@ -4,7 +4,7 @@ A big clock for Tessera's screensaver, in the colours you choose. Ora (Greek for
 minutes in two boxes as large as the screen allows, with the date, the weather's icon and the outside temperature under
 them.
 
-![Ora on a 10-inch, a 4-inch square and a 2.8-inch screen](store.png)
+![Ora on a 10-inch, a 4-inch square and a 2.8-inch screen](https://raw.githubusercontent.com/CooLaToS/tessera-plugin-ora/main/store.png)
 
 ## Set up
 
@@ -24,9 +24,9 @@ says otherwise. Under each one, the options that make it.
 
 | | |
 |---|---|
-| ![Gold flip cards](docs/images/gold-flip-cards.png) | ![White on blue](docs/images/white-on-blue.png) |
+| ![Gold flip cards](https://raw.githubusercontent.com/CooLaToS/tessera-plugin-ora/main/docs/images/gold-flip-cards.png) | ![White on blue](https://raw.githubusercontent.com/CooLaToS/tessera-plugin-ora/main/docs/images/white-on-blue.png) |
 | **Gold flip cards**: the defaults. | **White on blue**: hours White, boxes Blue. |
-| ![Teal outline, normal size](docs/images/teal-outline-normal.png) | ![Two tones on tinted cards](docs/images/two-tone-tinted.png) |
+| ![Teal outline, normal size](https://raw.githubusercontent.com/CooLaToS/tessera-plugin-ora/main/docs/images/teal-outline-normal.png) | ![Two tones on tinted cards](https://raw.githubusercontent.com/CooLaToS/tessera-plugin-ora/main/docs/images/two-tone-tinted.png) |
 | **Normal size**: hours Teal, style Outline, size Normal, date 20 November. | **Two tones**: hours Gold, minutes Champagne, boxes Tinted, date 20/11, row Icons and words. |
 
 <details>
@@ -34,11 +34,11 @@ says otherwise. Under each one, the options that make it.
 
 | | |
 |---|---|
-| ![Walnut boxes](docs/images/walnut-champagne-mint.png) | ![Oak and walnut](docs/images/oak-walnut-weekday.png) |
+| ![Walnut boxes](https://raw.githubusercontent.com/CooLaToS/tessera-plugin-ora/main/docs/images/walnut-champagne-mint.png) | ![Oak and walnut](https://raw.githubusercontent.com/CooLaToS/tessera-plugin-ora/main/docs/images/oak-walnut-weekday.png) |
 | **Wood**: hours Champagne, boxes Walnut, date and temperature Mint, date 20/11, row Icons and words. | **Oak and walnut**: hours Oak, minutes Champagne, boxes Walnut, date Oak, date Friday 20 November. |
-| ![Champagne outline, stacked](docs/images/champagne-outline-stacked.png) | ![Plain amber](docs/images/amber-plain.png) |
+| ![Champagne outline, stacked](https://raw.githubusercontent.com/CooLaToS/tessera-plugin-ora/main/docs/images/champagne-outline-stacked.png) | ![Plain amber](https://raw.githubusercontent.com/CooLaToS/tessera-plugin-ora/main/docs/images/amber-plain.png) |
 | **Outline, stacked**: hours Champagne, style Outline, size Stacked, date Friday 20 November. | **Plain**: hours Amber, style Plain digits, no leading zero, no seconds dot, no date, row Off. |
-| ![On a CYD](docs/images/cyd-gold.png) | ![On a 10-inch screen](docs/images/p4-10inch-two-tone.png) |
+| ![On a CYD](https://raw.githubusercontent.com/CooLaToS/tessera-plugin-ora/main/docs/images/cyd-gold.png) | ![On a 10-inch screen](https://raw.githubusercontent.com/CooLaToS/tessera-plugin-ora/main/docs/images/p4-10inch-two-tone.png) |
 | **CYD 2.8-inch** (320 x 240): the defaults. | **Guition 10.1-inch** (1280 x 800): two tones. |
 
 </details>
@@ -63,9 +63,9 @@ says otherwise. Under each one, the options that make it.
 
 ## Tried on
 
-- **Real screens**: two Guition ESP32-S3-4848S040 (4-inch, 480 x 480) with Tessera 0.4.99 and firmware 0.62.0, one
-  on a wall and one on a desk: the gold flip cards in Large, the minute changing, the seconds dot, the date and the
-  temperature, in standby by day. The other styles and colours are from the bench so far.
+- **Real screens**: two Guition ESP32-S3-4848S040 (4-inch, 480 x 480) running Ora 1.0 on Tessera 0.4.99 and firmware
+  0.62.0, one on a wall and one on a desk: the gold flip cards in Large, the minute changing, the seconds dot, the date
+  and the temperature, in standby by day. The other styles and colours are from the bench so far.
 - **The bench** of tessera-plugins (the real firmware, built for a computer): the CYD 2.8-inch, the Guition 4-inch,
   the Waveshare 4.3-inch standing up and the Guition 10.1-inch, every option.
 - **The firmware build** on GitHub (`.github/workflows/build.yml`) compiles Ora into the newest Tessera release for the
@@ -120,7 +120,7 @@ every change and every Monday), `tessera-watch.yml` builds again the day a new T
 
 Found a bug, tried Ora on a new screen or have an idea? Open an
 [issue](https://github.com/CooLaToS/tessera-plugin-ora/issues/new/choose); the forms ask for what is needed. Pull
-requests for fixes, translations and small improvements are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) first:
+requests for fixes, translations and small improvements are welcome. Read [CONTRIBUTING.md](https://github.com/CooLaToS/tessera-plugin-ora/blob/main/CONTRIBUTING.md) first:
 it has the rules and the checks to run.
 
 ## Credits
